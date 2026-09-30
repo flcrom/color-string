@@ -32,6 +32,37 @@ assert.deepEqual(string.get.hwb('hwb(240, 100%, 50.5%)'), [240, 100, 50.5, 1]);
 assert.deepEqual(string.get.hwb('HWB(240DEG, 100%, 50.5%)'), [240, 100, 50.5, 1]);
 assert.deepEqual(string.get.hwb('hwb(12 50% 0%)'), [12, 50, 0, 1]);
 
+// Hue angle units
+for (const [angle, hue] of [
+	['200grad', 180],
+	['0.5turn', 180],
+	['-0.25turn', 270],
+	['1.25turn', 90],
+	['400grad', 0],
+	['200GRAD', 180],
+	['0.5TURN', 180],
+	['180deg', 180],
+	['180', 180],
+]) {
+	assert.deepEqual(string.get.hsl(`hsl(${angle} 50% 25%)`), [hue, 50, 25, 1]);
+	assert.deepEqual(string.get.hsl(`hsla(${angle}, 50%, 25%, 0.5)`), [hue, 50, 25, 0.5]);
+	assert.deepEqual(string.get.hwb(`hwb(${angle} 10% 20%)`), [hue, 10, 20, 1]);
+	assert.deepEqual(string.get.hwb(`hwb(${angle}, 10%, 20%, 0.5)`), [hue, 10, 20, 0.5]);
+}
+
+for (const [angle, hue] of [['3.141592653589793rad', 180], ['-1.5707963267948966RAD', 270]]) {
+	assert.ok(Math.abs(string.get.hsl(`hsl(${angle} 50% 25%)`)[0] - hue) < 1e-10);
+	assert.ok(Math.abs(string.get.hwb(`hwb(${angle} 10% 20%)`)[0] - hue) < 1e-10);
+}
+
+for (const angle of ['180degrees', '1turns', '180 deg', '200 grad', '0.5 turn', '1raddeg']) {
+	assert.strictEqual(string.get.hsl(`hsl(${angle} 50% 25%)`), null);
+	assert.strictEqual(string.get.hwb(`hwb(${angle} 10% 20%)`), null);
+}
+
+assert.deepEqual(string.get('hsl(0.5turn 50% 25%)'), {model: 'hsl', value: [180, 50, 25, 1]});
+assert.deepEqual(string.get('hwb(200grad 10% 20%)'), {model: 'hwb', value: [180, 10, 20, 1]});
+
 // Generic .get()
 assert.deepEqual(string.get('invalid'), null);
 assert.deepEqual(string.get('#fef'), {model: 'rgb', value: [255, 238, 255, 1]});
