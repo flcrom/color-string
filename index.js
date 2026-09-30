@@ -133,14 +133,14 @@ cs.get.hsl = function (string) {
 		return null;
 	}
 
-	const hsl = /^hsla?\(\s*([+-]?(?:\d{0,3}\.)?\d+)(?:deg)?\s*,?\s*([+-]?[\d.]+)%\s*,?\s*([+-]?[\d.]+)%\s*(?:[,|/]\s*([+-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:e[+-]?\d+)?)\s*)?\)$/i;
+	const hsl = /^hsla?\(\s*([+-]?(?:\d{0,3}\.)?\d+)(deg|grad|rad|turn)?\s*,?\s*([+-]?[\d.]+)%\s*,?\s*([+-]?[\d.]+)%\s*(?:[,|/]\s*([+-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:e[+-]?\d+)?)\s*)?\)$/i;
 	const match = string.match(hsl);
 
 	if (match) {
-		const alpha = Number.parseFloat(match[4]);
-		const h = ((Number.parseFloat(match[1]) % 360) + 360) % 360;
-		const s = clamp(Number.parseFloat(match[2]), 0, 100);
-		const l = clamp(Number.parseFloat(match[3]), 0, 100);
+		const alpha = Number.parseFloat(match[5]);
+		const h = parseHue(match[1], match[2]);
+		const s = clamp(Number.parseFloat(match[3]), 0, 100);
+		const l = clamp(Number.parseFloat(match[4]), 0, 100);
 		const a = clamp(Number.isNaN(alpha) ? 1 : alpha, 0, 1);
 
 		return [h, s, l, a];
@@ -154,14 +154,14 @@ cs.get.hwb = function (string) {
 		return null;
 	}
 
-	const hwb = /^hwb\(\s*([+-]?\d{0,3}(?:\.\d+)?)(?:deg)?\s*[\s,]\s*([+-]?[\d.]+)%\s*[\s,]\s*([+-]?[\d.]+)%\s*(?:[\s,]\s*([+-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:e[+-]?\d+)?)\s*)?\)$/i;
+	const hwb = /^hwb\(\s*([+-]?\d{0,3}(?:\.\d+)?)(deg|grad|rad|turn)?\s*[\s,]\s*([+-]?[\d.]+)%\s*[\s,]\s*([+-]?[\d.]+)%\s*(?:[\s,]\s*([+-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:e[+-]?\d+)?)\s*)?\)$/i;
 	const match = string.match(hwb);
 
 	if (match) {
-		const alpha = Number.parseFloat(match[4]);
-		const h = ((Number.parseFloat(match[1]) % 360) + 360) % 360;
-		const w = clamp(Number.parseFloat(match[2]), 0, 100);
-		const b = clamp(Number.parseFloat(match[3]), 0, 100);
+		const alpha = Number.parseFloat(match[5]);
+		const h = parseHue(match[1], match[2]);
+		const w = clamp(Number.parseFloat(match[3]), 0, 100);
+		const b = clamp(Number.parseFloat(match[4]), 0, 100);
 		const a = clamp(Number.isNaN(alpha) ? 1 : alpha, 0, 1);
 		return [h, w, b, a];
 	}
@@ -219,6 +219,32 @@ cs.to.keyword = function (...rgb) {
 };
 
 // Helpers
+function parseHue(number_, unit) {
+	let hue = Number.parseFloat(number_);
+	switch (unit && unit.toLowerCase()) {
+		case 'grad': {
+			hue *= 0.9;
+			break;
+		}
+
+		case 'rad': {
+			hue *= 180 / Math.PI;
+			break;
+		}
+
+		case 'turn': {
+			hue *= 360;
+			break;
+		}
+
+		default: {
+			break;
+		}
+	}
+
+	return ((hue % 360) + 360) % 360;
+}
+
 function clamp(number_, min, max) {
 	return Math.min(Math.max(min, number_), max);
 }
